@@ -1,0 +1,22 @@
+* {
+	font-size: 12px;
+}
+
+table#weights {
+	background-color: antiquewhite;
+}
+
+button.square-btn {
+	height: 6rem;
+	width: 6rem;
+}
+
+#toolbar,
+#settings {
+	min-width: 20vw;
+	width: 25vw;
+	max-width: 30vw;
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: space-evenly;
+}

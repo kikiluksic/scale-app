@@ -1,0 +1,18 @@
+{
+	"name": "vaga",
+	"version": "1.0.0",
+	"description": "This is an application",
+	"main": "index.js",
+	"scripts": {
+		"dev": "nw src/"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"nw": "^0.54.1-sdk"
+	},
+	"dependencies": {
+		"serialport": "^9.2.0"
+	}
+}
