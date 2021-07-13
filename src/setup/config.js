@@ -28,4 +28,4 @@ const scale = {
 	},
 };
 
-module.exports = { scale };
+module.exports = scale;

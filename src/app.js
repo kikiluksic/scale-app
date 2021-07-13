@@ -1,11 +1,11 @@
-const config = require('setup/config.js');
+const scale = require('setup/config.js');
 
 const app = {
 	log: [],
 	init: () => {
 		const SerialPort = require('serialport'),
 			Readline = require('@serialport/parser-readline'),
-			port = new SerialPort(config.scale.port, {
+			port = new SerialPort(scale.port, {
 				autoOpen: false,
 			}),
 			parser = port.pipe(new Readline());
@@ -33,14 +33,14 @@ const app = {
 		app.eventListeners(port, parser);
 	},
 	_renderCommands: () => {
-		const commands = config.scale._get.commands();
+		const commands = scale._get.commands();
 
 		commands.forEach((command) => {
 			app._createButton('toolbar', command);
 		});
 	},
 	_renderSettings: () => {
-		const settings = config.scale._get.settings();
+		const settings = scale._get.settings();
 
 		settings.forEach((setting) => {
 			app._createButton('settings', setting);
@@ -80,7 +80,7 @@ const app = {
 		}
 	},
 	_writeToPort: (port, command) => {
-		const res = port.write(command + config.scale.terminator);
+		const res = port.write(command + scale.terminator);
 	},
 	_getData: (data) => {
 		if (data.match(/\d+/g) === null) {
@@ -88,12 +88,12 @@ const app = {
 			return;
 		}
 
-		const string = data.replace(config.scale.tare_label, '');
+		const string = data.replace(scale.tare_label, '');
 
 		const msg = {
 			weight: Number(string.replace(/[^0-9\.]+/g, '')),
 			unit: string.match(/[a-zA-Z]+/g, '')[0],
-			tare: data.includes(config.scale.tare_label),
+			tare: data.includes(scale.tare_label),
 		};
 
 		console.log(msg);
