@@ -75,28 +75,25 @@ const app = {
 
 		for (let i = 0; i < commandBtns.length; i++) {
 			commandBtns[i].onclick = () => {
-				console.log('clicked');
 				app._writeToPort(port, commandBtns[i].getAttribute('data-cmd'));
 			};
 		}
 	},
 	_writeToPort: (port, command) => {
-		const res = port.write(`${command}\r\n`);
-		console.log('written: ' + res);
+		const res = port.write(command + config.scale.terminator);
 	},
 	_getData: (data) => {
-		console.log('data');
 		if (data.match(/\d+/g) === null) {
 			console.log(data);
 			return;
 		}
 
-		const string = data.replace('NET', '');
+		const string = data.replace(config.scale.tare_label, '');
 
 		const msg = {
 			weight: Number(string.replace(/[^0-9\.]+/g, '')),
 			unit: string.match(/[a-zA-Z]+/g, '')[0],
-			tare: data.includes('NET'),
+			tare: data.includes(config.scale.tare_label),
 		};
 
 		console.log(msg);
