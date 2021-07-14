@@ -1,23 +1,20 @@
-const scale = require('setup/config.js');
+const {
+	name,
+	port: scalePort,
+	tare_label,
+	terminator,
+	_get,
+} = require('setup/config.js');
 
 const app = {
 	log: [],
 	init: () => {
 		const SerialPort = require('serialport'),
 			Readline = require('@serialport/parser-readline'),
-			port = new SerialPort(scale.port, {
+			port = new SerialPort(scalePort, {
 				autoOpen: false,
 			}),
 			parser = port.pipe(new Readline());
-
-		// Open the port
-		port.open(function (err) {
-			if (err) {
-				const error = 'Error opening port: ' + err.message;
-
-				return console.error(error);
-			}
-		});
 
 		SerialPort.list().then((data) => {
 			if (data[0] != undefined) {
@@ -32,31 +29,16 @@ const app = {
 		app.scaleCommandListeners(port);
 		app.eventListeners(port, parser);
 	},
-	_renderCommands: () => {
-		const commands = scale._get.commands();
-
-		commands.forEach((command) => {
-			app._createButton('toolbar', command);
-		});
-	},
-	_renderSettings: () => {
-		const settings = scale._get.settings();
-
-		settings.forEach((setting) => {
-			app._createButton('settings', setting);
-		});
-	},
-	_createButton: (container_id, data) => {
-		const toolbar = document.getElementById(container_id);
-		const button = document.createElement('button');
-		button.textContent = data.label;
-		button.setAttribute('class', 'square-btn');
-		button.setAttribute('value', data.action);
-		button.setAttribute('data-cmd', data.command);
-		toolbar.appendChild(button);
-	},
 	eventListeners: (port, parser) => {
-		// Event listeners
+		// Open the port
+		port.open(function (err) {
+			if (err) {
+				const error = 'Error opening port: ' + err.message;
+
+				return console.error(error);
+			}
+		});
+
 		port.on('open', () => {
 			document.getElementById('notifications').innerText = 'port is open';
 
@@ -68,10 +50,13 @@ const app = {
 			// Pipe the data into another stream (like a parser or standard out)
 			console.log('Port has been closed');
 		});
+
+		port.on('end', () => {
+			console.log('burek is end');
+		});
 	},
 	scaleCommandListeners: (port) => {
 		const commandBtns = document.getElementsByClassName('square-btn');
-		console.log(commandBtns);
 
 		for (let i = 0; i < commandBtns.length; i++) {
 			commandBtns[i].onclick = () => {
@@ -79,8 +64,31 @@ const app = {
 			};
 		}
 	},
+	_renderCommands: () => {
+		const commands = _get.commands();
+
+		commands.forEach((command) => {
+			app._createButton('toolbar', command);
+		});
+	},
+	_renderSettings: () => {
+		const settings = _get.settings();
+
+		settings.forEach((setting) => {
+			app._createButton('settings', setting);
+		});
+	},
+	_createButton: (container_id, { label, action, command }) => {
+		const toolbar = document.getElementById(container_id);
+		const button = document.createElement('button');
+		button.textContent = label;
+		button.setAttribute('class', 'square-btn');
+		button.setAttribute('value', action);
+		button.setAttribute('data-cmd', command);
+		toolbar.appendChild(button);
+	},
 	_writeToPort: (port, command) => {
-		const res = port.write(command + scale.terminator);
+		const res = port.write(command + terminator);
 	},
 	_getData: (data) => {
 		if (data.match(/\d+/g) === null) {
@@ -88,12 +96,12 @@ const app = {
 			return;
 		}
 
-		const string = data.replace(scale.tare_label, '');
+		const string = data.replace(tare_label, '');
 
 		const msg = {
 			weight: Number(string.replace(/[^0-9\.]+/g, '')),
 			unit: string.match(/[a-zA-Z]+/g, '')[0],
-			tare: data.includes(scale.tare_label),
+			tare: data.includes(tare_label),
 		};
 
 		console.log(msg);
