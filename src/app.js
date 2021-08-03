@@ -2,7 +2,7 @@ const {
 	name,
 	port: scalePort,
 	tare_label,
-	terminator,
+	delimiter,
 	_get,
 } = require('setup/config.js');
 
@@ -23,35 +23,36 @@ const app = {
 				'<pre>' + JSON.stringify(serialPortData) + '</pre>';
 		}
 
-		app._renderCommands();
-		app._renderSettings();
+		// render scale name
+		document.getElementById('scale-name').textContent = name;
+
+		app._renderCommandBtns(port, parser);
+		app._renderSettingsBtns();
 		app.scaleCommandListeners(port);
 		app.eventListeners(port, parser);
 	},
-	eventListeners: (port, parser) => {
+	eventListeners: async (port, parser) => {
 		// Open the port
-		port.open(function (err) {
+		await port.open((err) => {
 			if (err) {
-				const error = 'Error opening port: ' + err.message;
-
-				return console.error(error);
+				return console.error('Error opening port: ' + err.message);
 			}
 		});
 
 		port.on('open', () => {
 			document.getElementById('notifications').innerText = 'port is open';
 
-			// Parser output - outputs in single line
 			parser.on('data', app._getData);
 		});
 
 		port.on('close', () => {
 			// Pipe the data into another stream (like a parser or standard out)
-			console.log('Port has been closed');
+			document.getElementById('notifications').innerText = 'port is closed';
+			console.info('Port has been closed');
 		});
 
 		port.on('end', () => {
-			console.log('burek is end');
+			console.log('Connection to port has closed');
 		});
 	},
 	scaleCommandListeners: (port) => {
@@ -63,14 +64,13 @@ const app = {
 			};
 		}
 	},
-	_renderCommands: () => {
+	_renderCommandBtns: (port) => {
 		const commands = _get.commands();
-
 		commands.forEach((command) => {
 			app._createButton('toolbar', command);
 		});
 	},
-	_renderSettings: () => {
+	_renderSettingsBtns: () => {
 		const settings = _get.settings();
 
 		settings.forEach((setting) => {
@@ -81,13 +81,17 @@ const app = {
 		const toolbar = document.getElementById(container_id);
 		const button = document.createElement('button');
 		button.textContent = label;
-		button.setAttribute('class', 'square-btn');
+		if (container_id === 'settings') {
+			button.setAttribute('class', 'square-btn settings-btn');
+		} else {
+			button.setAttribute('class', 'square-btn');
+		}
 		button.setAttribute('value', action);
 		button.setAttribute('data-cmd', command);
 		toolbar.appendChild(button);
 	},
 	_writeToPort: (port, command) => {
-		const res = port.write(command + terminator);
+		port.write(command + delimiter);
 	},
 	_getData: (data) => {
 		if (data.match(/\d+/g) === null) {
@@ -100,9 +104,7 @@ const app = {
 		const isTare = data.includes(tare_label);
 
 		const msg = {
-			weight: isTare
-				? Number(string.replace(/[^0-9\.]+/g, '')) * -1
-				: Number(string.replace(/[^0-9\.]+/g, '')),
+			weight: Number(data.substr(0, 10)),
 			unit: string.match(/[a-zA-Z]+/g, '')[0],
 			tare: isTare,
 		};

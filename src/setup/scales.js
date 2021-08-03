@@ -35,7 +35,7 @@ const scales = [
 				enabled: 1,
 			},
 			{
-				label: 'Countinuous weights print',
+				label: 'Countinuous weights print', // does not work
 				action: 'continuous-print-of-weights',
 				command: 'CP',
 				enabled: 1,

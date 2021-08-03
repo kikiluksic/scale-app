@@ -5,7 +5,7 @@ const scale = {
 	port: 'COM3',
 	units: ['g', 'kg', 'ct'],
 	tare_label: 'NET',
-	terminator: '\r\n', // terminate/send the command
+	delimiter: '\r\n', // terminate/send the command
 	_get: {
 		config() {
 			// scale commands and settings
