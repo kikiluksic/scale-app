@@ -8,7 +8,7 @@ const {
 
 const app = {
 	log: [],
-	init: () => {
+	init: async () => {
 		const SerialPort = require('serialport'),
 			Readline = require('@serialport/parser-readline'),
 			port = new SerialPort(scalePort, {
@@ -16,13 +16,12 @@ const app = {
 			}),
 			parser = port.pipe(new Readline());
 
-		SerialPort.list().then((data) => {
-			if (data[0] != undefined) {
-				const serialPortData = app._getSerialPortData(data);
-				document.getElementById('specification').innerHTML =
-					'<pre>' + JSON.stringify(serialPortData) + '</pre>';
-			}
-		});
+		const data = await SerialPort.list();
+		if (data[0] != undefined) {
+			const serialPortData = app._getSerialPortData(data);
+			document.getElementById('specification').innerHTML =
+				'<pre>' + JSON.stringify(serialPortData) + '</pre>';
+		}
 
 		app._renderCommands();
 		app._renderSettings();
@@ -98,10 +97,14 @@ const app = {
 
 		const string = data.replace(tare_label, '');
 
+		const isTare = data.includes(tare_label);
+
 		const msg = {
-			weight: Number(string.replace(/[^0-9\.]+/g, '')),
+			weight: isTare
+				? Number(string.replace(/[^0-9\.]+/g, '')) * -1
+				: Number(string.replace(/[^0-9\.]+/g, '')),
 			unit: string.match(/[a-zA-Z]+/g, '')[0],
-			tare: data.includes(tare_label),
+			tare: isTare,
 		};
 
 		console.log(msg);
