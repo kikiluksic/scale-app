@@ -38,7 +38,7 @@ const scales = [
 				label: 'Countinuous weights print', // does not work
 				action: 'continuous-print-of-weights',
 				command: 'CP',
-				enabled: 1,
+				enabled: 0,
 			},
 			{
 				label: 'Auto Print (non-zero only)',

@@ -2,7 +2,7 @@ const scales = require('./scales.js');
 
 const scale = {
 	name: 'NVT3200M',
-	port: 'COM3',
+	serial_port: 'COM3',
 	units: ['g', 'kg', 'ct'],
 	tare_label: 'NET',
 	delimiter: '\r\n', // terminate/send the command

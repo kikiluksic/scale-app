@@ -1,6 +1,6 @@
 const {
 	name,
-	port: scalePort,
+	serial_port,
 	tare_label,
 	delimiter,
 	_get,
@@ -11,7 +11,7 @@ const app = {
 	init: async () => {
 		const SerialPort = require('serialport'),
 			Readline = require('@serialport/parser-readline'),
-			port = new SerialPort(scalePort, {
+			port = new SerialPort(serial_port, {
 				autoOpen: false,
 			}),
 			parser = port.pipe(new Readline());
@@ -26,7 +26,7 @@ const app = {
 		// render scale name
 		document.getElementById('scale-name').textContent = name;
 
-		app._renderCommandBtns(port, parser);
+		app._renderCommandBtns();
 		app._renderSettingsBtns();
 		app.scaleCommandListeners(port);
 		app.eventListeners(port, parser);
@@ -64,7 +64,7 @@ const app = {
 			};
 		}
 	},
-	_renderCommandBtns: (port) => {
+	_renderCommandBtns: () => {
 		const commands = _get.commands();
 		commands.forEach((command) => {
 			app._createButton('toolbar', command);
@@ -81,13 +81,15 @@ const app = {
 		const toolbar = document.getElementById(container_id);
 		const button = document.createElement('button');
 		button.textContent = label;
+		button.setAttribute('value', action);
+		button.setAttribute('data-cmd', command);
+
 		if (container_id === 'settings') {
 			button.setAttribute('class', 'square-btn settings-btn');
 		} else {
 			button.setAttribute('class', 'square-btn');
 		}
-		button.setAttribute('value', action);
-		button.setAttribute('data-cmd', command);
+
 		toolbar.appendChild(button);
 	},
 	_writeToPort: (port, command) => {
@@ -99,14 +101,10 @@ const app = {
 			return;
 		}
 
-		const string = data.replace(tare_label, '');
-
-		const isTare = data.includes(tare_label);
-
 		const msg = {
 			weight: Number(data.substr(0, 10)),
-			unit: string.match(/[a-zA-Z]+/g, '')[0],
-			tare: isTare,
+			unit: data.replace(tare_label, '').match(/[a-zA-Z]+/g, '')[0],
+			tare: data.includes(tare_label),
 		};
 
 		console.log(msg);
