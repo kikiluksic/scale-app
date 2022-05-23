@@ -6,32 +6,52 @@ const {
 	_get,
 } = require('setup/config.js');
 
+const SerialPort = require('serialport');
+
 const app = {
 	log: [],
 	init: async () => {
-		const SerialPort = require('serialport'),
-			Readline = require('@serialport/parser-readline'),
-			port = new SerialPort(serial_port, {
-				autoOpen: false,
-			}),
-			parser = port.pipe(new Readline());
+		await app.getPorts();
 
-		const data = await SerialPort.list();
-		if (data[0] != undefined) {
+		/* if (data[0] != undefined) {
 			const serialPortData = app._getSerialPortData(data);
 			document.getElementById('specification').innerHTML =
 				'<pre>' + JSON.stringify(serialPortData) + '</pre>';
-		}
+		} */
 
 		// render scale name
 		document.getElementById('scale-name').textContent = name;
 
+		// Add list of ports to select from
+
 		app._renderCommandBtns();
 		app._renderSettingsBtns();
-		app.scaleCommandListeners(port);
+	},
+	getPorts: async () => {
+		const ports = await SerialPort.list();
+		const container = document.getElementById('port-list');
+
+		ports.forEach((port) => {
+			const button = document.createElement('button');
+			button.textContent = port.path;
+			button.onclick = app.connect;
+			container.appendChild(button);
+		});
+
+		console.log('PORTS', ports);
+	},
+	connect({ target: { textContent: serialPort } }) {
+		const Readline = require('@serialport/parser-readline'),
+			port = new SerialPort(serialPort, {
+				autoOpen: false,
+			}),
+			parser = port.pipe(new Readline());
+
 		app.eventListeners(port, parser);
+		app.scaleCommandListeners(port);
 	},
 	eventListeners: async (port, parser) => {
+		console.log('PORT POLE', port);
 		// Open the port
 		await port.open((err) => {
 			if (err) {
@@ -42,7 +62,9 @@ const app = {
 		port.on('open', () => {
 			document.getElementById('notifications').innerText = 'port is open';
 
-			parser.on('data', app._getData);
+			//parser.on('data', app._getData);
+			parser.on('data', (data) => console.log(data.toString()));
+			parser.on('port', (data) => console.log(data.toString()));
 		});
 
 		port.on('close', () => {

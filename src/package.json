@@ -17,6 +17,9 @@
 		"max-height": 1000,
 		"position": "mouse"
 	},
+	"developer": {
+        "showDevToolsOnStartup": true
+    },
 	"keywords": [],
 	"author": "",
 	"license": "ISC"

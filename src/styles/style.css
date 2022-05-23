@@ -21,3 +21,8 @@ button.square-btn {
 	flex-flow: row wrap;
 	justify-content: space-evenly;
 }
+
+#port-list {
+	width: 50%;
+	background-color: lightgray;
+}
