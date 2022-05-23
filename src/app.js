@@ -24,12 +24,16 @@ const app = {
 
 		// Add list of ports to select from
 
-		app._renderCommandBtns();
-		app._renderSettingsBtns();
+		app.renderCommandBtns();
+		app.renderSettingsBtns();
 	},
 	getPorts: async () => {
 		const ports = await SerialPort.list();
 		const container = document.getElementById('port-list');
+
+		const serialPortData = app._getSerialPortData(ports);
+		document.getElementById('specification').innerHTML =
+			'<pre>' + JSON.stringify(serialPortData) + '</pre>';
 
 		ports.forEach((port) => {
 			const button = document.createElement('button');
@@ -51,7 +55,7 @@ const app = {
 		app.scaleCommandListeners(port);
 	},
 	eventListeners: async (port, parser) => {
-		console.log('PORT POLE', port);
+		console.log('PORT', port);
 		// Open the port
 		await port.open((err) => {
 			if (err) {
@@ -62,7 +66,7 @@ const app = {
 		port.on('open', () => {
 			document.getElementById('notifications').innerText = 'port is open';
 
-			//parser.on('data', app._getData);
+			//parser.on('data', app.getData);
 			parser.on('data', (data) => console.log(data.toString()));
 			parser.on('port', (data) => console.log(data.toString()));
 		});
@@ -82,24 +86,24 @@ const app = {
 
 		for (let i = 0; i < commandBtns.length; i++) {
 			commandBtns[i].onclick = () => {
-				app._writeToPort(port, commandBtns[i].getAttribute('data-cmd'));
+				app.writeToPort(port, commandBtns[i].getAttribute('data-cmd'));
 			};
 		}
 	},
-	_renderCommandBtns: () => {
+	renderCommandBtns: () => {
 		const commands = _get.commands();
 		commands.forEach((command) => {
-			app._createButton('toolbar', command);
+			app.createButton('toolbar', command);
 		});
 	},
-	_renderSettingsBtns: () => {
+	renderSettingsBtns: () => {
 		const settings = _get.settings();
 
 		settings.forEach((setting) => {
-			app._createButton('settings', setting);
+			app.createButton('settings', setting);
 		});
 	},
-	_createButton: (container_id, { label, action, command }) => {
+	createButton: (container_id, { label, action, command }) => {
 		const toolbar = document.getElementById(container_id);
 		const button = document.createElement('button');
 		button.textContent = label;
@@ -114,10 +118,10 @@ const app = {
 
 		toolbar.appendChild(button);
 	},
-	_writeToPort: (port, command) => {
+	writeToPort: (port, command) => {
 		port.write(command + delimiter);
 	},
-	_getData: (data) => {
+	getData: (data) => {
 		if (data.match(/\d+/g) === null) {
 			console.log(data);
 			return;
@@ -131,9 +135,9 @@ const app = {
 
 		console.log(msg);
 	},
-	_getSerialPortData: (data) => {
+	_getSerialPortData: (ports) => {
 		const dataArr = [];
-		data.forEach((option) => {
+		ports.forEach((option) => {
 			dataArr.push({
 				manufacturer: option.manufacturer,
 				serialNumber: option.serialNumber,
