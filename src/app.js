@@ -1,52 +1,62 @@
-const {
-	name,
-	serial_port,
-	tare_label,
-	delimiter,
-	_get,
-} = require('setup/config.js');
+import getScale from './setup/scales.js';
 
 const SerialPort = require('serialport');
 
 const app = {
 	log: [],
+	delimiter: null,
 	init: async () => {
 		await app.getPorts();
 
-		/* if (data[0] != undefined) {
-			const serialPortData = app._getSerialPortData(data);
-			document.getElementById('specification').innerHTML =
-				'<pre>' + JSON.stringify(serialPortData) + '</pre>';
-		} */
+		return;
 
-		// render scale name
-		document.getElementById('scale-name').textContent = name;
-
-		// Add list of ports to select from
-
-		app.renderCommandBtns();
+		//app.renderCommandBtns();
 		app.renderSettingsBtns();
 	},
 	getPorts: async () => {
 		const ports = await SerialPort.list();
 		const container = document.getElementById('port-list');
 
-		const serialPortData = app._getSerialPortData(ports);
+		/* const serialPortData = app.getSerialPortData(ports);
 		document.getElementById('specification').innerHTML =
-			'<pre>' + JSON.stringify(serialPortData) + '</pre>';
+			'<pre>' + JSON.stringify(serialPortData) + '</pre>'; */
 
-		ports.forEach((port) => {
+		// Check if only one port, connect to it automatically
+		if (ports.length === 1) {
+			const { path, manufacturer } = ports[0];
+			const { tare_label, delimiter, commands, settings } =
+				getScale(manufacturer);
+
+				app.delimiter = delimiter;
+				await app.renderCommandBtns(commands);
+				await app.renderSettingsBtns(settings);
+				await app.connect(path);
+
+			return;
+		}
+
+		// TODO Write logic if there are more COM ports available
+		// Select PORT and then get scales information
+
+		/* ports.forEach(({ path, manufacturer }) => {
+			const scaleData = getScale(manufacturer);
+			console.log('ScaleData', scaleData);
+
 			const button = document.createElement('button');
-			button.textContent = port.path;
-			button.onclick = app.connect;
+			button.textContent = path;
+			button.dataset.manufacturer = manufacturer;
+			button.onclick = ({
+				target: {
+					textContent: serialPort,
+					dataset: { manufacturer },
+				},
+			}) => app.connect;
 			container.appendChild(button);
-		});
-
-		console.log('PORTS', ports);
+		}); */
 	},
-	connect({ target: { textContent: serialPort } }) {
+	connect: async (path) => {
 		const Readline = require('@serialport/parser-readline'),
-			port = new SerialPort(serialPort, {
+			port = new SerialPort(path, {
 				autoOpen: false,
 			}),
 			parser = port.pipe(new Readline());
@@ -55,7 +65,6 @@ const app = {
 		app.scaleCommandListeners(port);
 	},
 	eventListeners: async (port, parser) => {
-		console.log('PORT', port);
 		// Open the port
 		await port.open((err) => {
 			if (err) {
@@ -90,16 +99,13 @@ const app = {
 			};
 		}
 	},
-	renderCommandBtns: () => {
-		const commands = _get.commands();
-		commands.forEach((command) => {
+	renderCommandBtns: async (commands) => {
+		await commands.forEach((command) => {
 			app.createButton('toolbar', command);
 		});
 	},
-	renderSettingsBtns: () => {
-		const settings = _get.settings();
-
-		settings.forEach((setting) => {
+	renderSettingsBtns: async (settings) => {
+		await settings.forEach((setting) => {
 			app.createButton('settings', setting);
 		});
 	},
@@ -119,7 +125,7 @@ const app = {
 		toolbar.appendChild(button);
 	},
 	writeToPort: (port, command) => {
-		port.write(command + delimiter);
+		port.write(command + app.delimiter);
 	},
 	getData: (data) => {
 		if (data.match(/\d+/g) === null) {
@@ -135,7 +141,7 @@ const app = {
 
 		console.log(msg);
 	},
-	_getSerialPortData: (ports) => {
+	getSerialPortData: (ports) => {
 		const dataArr = [];
 		ports.forEach((option) => {
 			dataArr.push({

@@ -1,6 +1,10 @@
-const scales = [
-	{
+const scales = {
+	FTDI :{
 		name: 'NVT3200M',
+		manufacturer: 'FTDI',
+		tare_label: 'NET',
+		delimiter: '\r\n',
+		//units: ['g', 'kg', 'ct'], // TODO Remove if not used
 		commands: [
 			{
 				label: 'Print',
@@ -90,23 +94,15 @@ const scales = [
 			},
 		],
 	},
-	{
-		name: 'TESTSCALE',
-		commands: [
-			{
-				action: 'print',
-				command: 'P',
-			},
-			{
-				action: 'zero',
-				command: 'Z',
-			},
-			{
-				action: 'tare',
-				command: 'T',
-			},
-		],
+	Prolific: {
+		name: 'Elzab',
+		manufacturer: 'Prolific',
 	},
-];
+};
 
-module.exports = scales;
+const getScale = (manufacturer) => {
+	document.getElementById('scale-name').textContent = scales[manufacturer].name;
+	return scales[manufacturer];
+};
+
+export default getScale;
