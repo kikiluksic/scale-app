@@ -102,4 +102,12 @@ const scales = {
 		manufacturer: 'Prolific',
 		single_unit: 'kg' // scale can only display in kilograms
 	},
+	novaVaga: {
+		name: '',
+		manufacturer: '',
+		single_unit: '',
+		delimiter: null,
+		commands: [],
+		settings: []
+	}
 };

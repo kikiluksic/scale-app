@@ -14,10 +14,6 @@ const app = {
 	getPorts: async () => {
 		const ports = await SerialPort.list();
 
-		/* const serialPortData = app.getSerialPortData(ports);
-		document.getElementById('specification').innerHTML =
-			'<pre>' + JSON.stringify(serialPortData) + '</pre>'; */
-
 		// Check if only one port, connect to it automatically
 		if (ports.length > 1) {
 			// TODO Write logic if there are more COM ports available
@@ -145,9 +141,6 @@ const app = {
 
 		toolbar.appendChild(button);
 	},
-	/* writeToPort: (port, command) => {
-		port.write(command + app.delimiter);
-	}, */
 	getData: (data) => {
 		if (data.match(/\d+/g) === null) {
 			console.log(data);
