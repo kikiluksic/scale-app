@@ -1,10 +1,13 @@
+const getScale = (manufacturer) => scales[manufacturer];
+
+export default getScale;
+
 const scales = {
-	FTDI :{
+	FTDI: {
 		name: 'NVT3200M',
 		manufacturer: 'FTDI',
 		tare_label: 'NET',
 		delimiter: '\r\n',
-		//units: ['g', 'kg', 'ct'], // TODO Remove if not used
 		commands: [
 			{
 				label: 'Print',
@@ -97,12 +100,6 @@ const scales = {
 	Prolific: {
 		name: 'Elzab',
 		manufacturer: 'Prolific',
+		single_unit: 'kg' // scale can only display in kilograms
 	},
 };
-
-const getScale = (manufacturer) => {
-	document.getElementById('scale-name').textContent = scales[manufacturer].name;
-	return scales[manufacturer];
-};
-
-export default getScale;

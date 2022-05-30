@@ -5,40 +5,26 @@ const SerialPort = require('serialport');
 const app = {
 	log: [],
 	delimiter: null,
+	singleUnit: '',
 	init: async () => {
 		await app.getPorts();
 
 		return;
-
-		//app.renderCommandBtns();
-		app.renderSettingsBtns();
 	},
 	getPorts: async () => {
 		const ports = await SerialPort.list();
-		const container = document.getElementById('port-list');
 
 		/* const serialPortData = app.getSerialPortData(ports);
 		document.getElementById('specification').innerHTML =
 			'<pre>' + JSON.stringify(serialPortData) + '</pre>'; */
 
 		// Check if only one port, connect to it automatically
-		if (ports.length === 1) {
-			const { path, manufacturer } = ports[0];
-			const { tare_label, delimiter, commands, settings } =
-				getScale(manufacturer);
+		if (ports.length > 1) {
+			// TODO Write logic if there are more COM ports available
+			const container = document.getElementById('port-list');
+			// Select PORT and then get scales information
 
-				app.delimiter = delimiter;
-				await app.renderCommandBtns(commands);
-				await app.renderSettingsBtns(settings);
-				await app.connect(path);
-
-			return;
-		}
-
-		// TODO Write logic if there are more COM ports available
-		// Select PORT and then get scales information
-
-		/* ports.forEach(({ path, manufacturer }) => {
+			/* ports.forEach(({ path, manufacturer }) => {
 			const scaleData = getScale(manufacturer);
 			console.log('ScaleData', scaleData);
 
@@ -53,6 +39,30 @@ const app = {
 			}) => app.connect;
 			container.appendChild(button);
 		}); */
+
+			return;
+		}
+
+		const { path, manufacturer } = ports[0];
+		const { name, tare_label, delimiter, commands, settings, single_unit } =
+			getScale(manufacturer);
+
+		document.getElementById('scale-name').textContent = name;
+
+		if (commands) {
+			await app.renderCommandBtns(commands);
+		}
+
+		if (settings) {
+			await app.renderSettingsBtns(settings);
+		}
+
+		if (single_unit) {
+			app.singleUnit = single_unit;
+		}
+
+		app.delimiter = delimiter;
+		await app.connect(path);
 	},
 	connect: async (path) => {
 		const Readline = require('@serialport/parser-readline'),
@@ -61,10 +71,15 @@ const app = {
 			}),
 			parser = port.pipe(new Readline());
 
-		app.eventListeners(port, parser);
+		app.portListeners(port, parser);
 		app.scaleCommandListeners(port);
 	},
-	eventListeners: async (port, parser) => {
+	printOutput(data) {
+		const stringData = data.toString();
+		const output = stringData.trim() + ' ' + app.singleUnit;
+		console.log(output);
+	},
+	portListeners: async (port, parser) => {
 		// Open the port
 		await port.open((err) => {
 			if (err) {
@@ -73,16 +88,17 @@ const app = {
 		});
 
 		port.on('open', () => {
-			document.getElementById('notifications').innerText = 'port is open';
+			document.getElementById('notifications').innerText = 'scale is connected';
 
 			//parser.on('data', app.getData);
-			parser.on('data', (data) => console.log(data.toString()));
-			parser.on('port', (data) => console.log(data.toString()));
+			//parser.on('port', (data) => console.log(data.toString()));
+			parser.on('data', app.printOutput);
 		});
 
 		port.on('close', () => {
 			// Pipe the data into another stream (like a parser or standard out)
-			document.getElementById('notifications').innerText = 'port is closed';
+			document.getElementById('notifications').innerText =
+				'scale is not connected';
 			console.info('Port has been closed');
 		});
 
@@ -95,7 +111,8 @@ const app = {
 
 		for (let i = 0; i < commandBtns.length; i++) {
 			commandBtns[i].onclick = () => {
-				app.writeToPort(port, commandBtns[i].getAttribute('data-cmd'));
+				const command = commandBtns[i].getAttribute('data-cmd');
+				port.write(command + app.delimiter);
 			};
 		}
 	},
@@ -103,11 +120,15 @@ const app = {
 		await commands.forEach((command) => {
 			app.createButton('toolbar', command);
 		});
+
+		document.getElementById('toolbar').style.display = 'flex';
 	},
 	renderSettingsBtns: async (settings) => {
 		await settings.forEach((setting) => {
 			app.createButton('settings', setting);
 		});
+
+		document.getElementById('settings').style.display = 'flex';
 	},
 	createButton: (container_id, { label, action, command }) => {
 		const toolbar = document.getElementById(container_id);
@@ -124,9 +145,9 @@ const app = {
 
 		toolbar.appendChild(button);
 	},
-	writeToPort: (port, command) => {
+	/* writeToPort: (port, command) => {
 		port.write(command + app.delimiter);
-	},
+	}, */
 	getData: (data) => {
 		if (data.match(/\d+/g) === null) {
 			console.log(data);
